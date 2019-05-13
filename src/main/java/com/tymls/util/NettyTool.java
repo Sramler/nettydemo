@@ -8,7 +8,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.CharsetUtil;
-import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.UnsupportedEncodingException;
 
@@ -16,7 +16,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
-@Log
+@Slf4j
 public class NettyTool {
 
   /**
@@ -32,7 +32,7 @@ public class NettyTool {
     response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
     response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
     if (channel.isOpen() && channel.isWritable()) {
-      log.info("http响应json内容为：" + content);
+      log.info("http响应json内容为：{}");
       ChannelFuture future = channel.writeAndFlush(response);
       future.addListener(ChannelFutureListener.CLOSE);
       return;
@@ -51,7 +51,7 @@ public class NettyTool {
   public static void writeXmlToClient(String content, Channel channel, FullHttpRequest req) {
     ByteBuf buf = Unpooled.wrappedBuffer(content.getBytes(CharsetUtil.UTF_8));
     FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, buf);
-    log.info("http响应xml内容为：" + content);
+    log.info("http响应xml内容为：{}", content);
     response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/xml; charset=UTF-8");
     response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
     if (channel.isOpen() && channel.isWritable()) {
@@ -89,7 +89,7 @@ public class NettyTool {
   public static void writeHtmlToClient(String content, Channel channel, FullHttpRequest req) {
     ByteBuf buf = Unpooled.wrappedBuffer(content.getBytes(CharsetUtil.UTF_8));
     FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, buf);
-    log.info("http响应html内容为：" + content);
+    log.info("http响应html内容为：{}", content);
     response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8");
     response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
     if (channel.isOpen() && channel.isWritable()) {
@@ -179,7 +179,7 @@ public class NettyTool {
     response.headers().set(HttpHeaderNames.CACHE_CONTROL, "no-cache");
     response.headers().set(HttpHeaderNames.EXPIRES, 0);
     if (channel.isOpen() && channel.isWritable()) {
-      log.info("http响应图片流，长度=" + buff.length);
+      log.info("http响应图片流，长度={}", buff.length);
       ChannelFuture future = channel.writeAndFlush(response);
       future.addListener(ChannelFutureListener.CLOSE);
       return;

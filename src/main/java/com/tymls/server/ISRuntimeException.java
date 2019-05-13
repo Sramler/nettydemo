@@ -1,27 +1,20 @@
 package com.tymls.server;
 
-import lombok.extern.java.Log;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
-@Log
+@Slf4j
+@Data
 public class ISRuntimeException extends RuntimeException {
   private static final long serialVersionUID = -1L;
 
   private ResponseCode errorCode;
 
-  public ResponseCode getErrorCode() {
-    return errorCode;
-  }
-
-  public void setErrorCode(ResponseCode errorCode) {
-    this.errorCode = errorCode;
-  }
-
   public ISRuntimeException(ResponseCode errorCode, String msg) {
     super(msg);
     this.errorCode = errorCode;
     if (errorCode.getValue() < ResponseCode.OK.getValue()) {
-      // TODO 错误日志
-      log.info("AT:" + Thread.currentThread().getStackTrace()[2]);
+      log.info("AT:{}", Thread.currentThread().getStackTrace()[2]);
       log.info(msg);
     }
   }

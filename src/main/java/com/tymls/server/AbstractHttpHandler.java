@@ -37,7 +37,8 @@ public class AbstractHttpHandler implements HttpHandler {
     HttpHandlerContext ctx1 = ctx;
     boolean isException = false;
     // 检查session以及调用此方法的权限
-    if (methodDefine.annotion != null) {
+    if (false) {
+      // if (methodDefine.annotion != null) {
       // TODO session 和权限校验
       ctx.writeToChannel();
       return;

@@ -11,7 +11,7 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
 import io.netty.handler.codec.http.multipart.HttpDataFactory;
 import io.netty.util.CharsetUtil;
-import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ import java.util.Map;
  *
  * @author luke
  */
-@Log
+@Slf4j
 public class RequestContext {
 
   private static final HttpDataFactory factory =
@@ -122,17 +122,6 @@ public class RequestContext {
     }
   }
 
-  public HashMap<String, String> getParamMap() {
-    HashMap<String, String> result2 = decoderToMap(this.queryStringDecoder);
-    JSONObject result = getPostJson(false);
-    if (result != null) {
-      for (Map.Entry<String, Object> item : result.entrySet()) {
-        result2.put(item.getKey(), item.getValue().toString());
-      }
-    }
-    return result2;
-  }
-
   public List<SqlOrderByItem> getOrderBy(
       String defaultOrder, SqlOrderItemType defaultOrderItemType) {
     // 按参数order进行排序
@@ -200,35 +189,6 @@ public class RequestContext {
 
   public String getRemoteIp() {
     return getXRealIp(this.parent.getChannelContext().channel(), this.parent.getRequest());
-  }
-
-  /**
-   * 返回提交参数中根据Post传入的json结果
-   *
-   * @return
-   */
-  public JSONObject getPostJson() {
-    return this.getPostJson(true);
-  }
-
-  /**
-   * 返回提交参数中根据Post传入的json结果
-   *
-   * @return
-   */
-  public JSONObject getPostJson(boolean checkExits) {
-    if (this.postJSON == null) {
-      String body = this.parent.getRequest().content().toString(CharsetUtil.UTF_8);
-      log.info("请求参数：" + body);
-      if (StringUtils.isNotBlank(body)) {
-        this.postJSON = JSONObject.parseObject(body);
-      } else if (checkExits) {
-        throw new ISRuntimeException("客户端访问网址 (url-%s) 没有传入json数据，不能读取Json数据", this.getUri());
-      } else {
-        return null;
-      }
-    }
-    return this.postJSON;
   }
 
   public boolean hasPostParam(String paramName) {
@@ -572,10 +532,49 @@ public class RequestContext {
     }
     return this._requestBody;
   }
+  /**
+   * 返回提交参数中根据Post传入的json结果
+   *
+   * @return
+   */
+  public JSONObject getPostJson() {
+    return this.getPostJson(true);
+  }
+
+  /**
+   * 返回提交参数中根据Post传入的json结果
+   *
+   * @return
+   */
+  public JSONObject getPostJson(boolean checkExits) {
+    if (this.postJSON == null) {
+      String body = this.parent.getRequest().content().toString(CharsetUtil.UTF_8);
+      log.info("请求参数：" + body);
+      if (StringUtils.isNotBlank(body)) {
+        this.postJSON = JSONObject.parseObject(body);
+      } else if (checkExits) {
+        throw new ISRuntimeException("客户端访问网址 (url-%s) 没有传入json数据，不能读取Json数据", this.getUri());
+      } else {
+        return null;
+      }
+    }
+    return this.postJSON;
+  }
 
   //  public SysLogService getSysLogService() {
   //    if (sysLogService == null)
   //      sysLogService = (SysLogService) applicationContext.getBean("sysLogService");
   //    return sysLogService;
   //  }
+
+  public HashMap<String, String> getParamMap() {
+    HashMap<String, String> result2 = decoderToMap(this.queryStringDecoder);
+    JSONObject result = getPostJson(false);
+    if (result != null) {
+      for (Map.Entry<String, Object> item : result.entrySet()) {
+        result2.put(item.getKey(), item.getValue().toString());
+      }
+    }
+    return result2;
+  }
 }

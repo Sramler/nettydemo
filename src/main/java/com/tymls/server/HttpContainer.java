@@ -11,32 +11,20 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ConcurrentMap;
 
 @Sharable
+@Slf4j
+@Data
 public class HttpContainer {
   /** 监听端口 */
   private int port;
 
   /** http服务对外提供的所有处理器 */
   private ConcurrentMap<String, HttpHandler> handlers;
-
-  public int getPort() {
-    return port;
-  }
-
-  public void setPort(int port) {
-    this.port = port;
-  }
-
-  public ConcurrentMap<String, HttpHandler> getHandlers() {
-    return handlers;
-  }
-
-  public void setHandlers(ConcurrentMap<String, HttpHandler> handlerMap) {
-    this.handlers = handlerMap;
-  }
 
   public void start() {
     new Thread(new RunThread()).start();
@@ -45,8 +33,7 @@ public class HttpContainer {
   public class RunThread implements Runnable {
     @Override
     public void run() {
-      // TODO 日志 错误日志
-      // LogUtil.info("Simple http Server started at port : " + port);
+      log.info("netty服务启动端口 : {}", port);
       EventLoopGroup bossGroup = new NioEventLoopGroup();
       EventLoopGroup workerGroup = new NioEventLoopGroup();
       Initializer initializer = new Initializer();
@@ -62,8 +49,7 @@ public class HttpContainer {
         ChannelFuture f = b.bind(port).sync();
         f.channel().closeFuture().sync();
       } catch (Exception e) {
-        // TODO 日志 错误日志
-        // LogUtil.error(e.getMessage(), e);
+        log.error(e.getMessage(), e);
       } finally {
         workerGroup.shutdownGracefully();
         bossGroup.shutdownGracefully();

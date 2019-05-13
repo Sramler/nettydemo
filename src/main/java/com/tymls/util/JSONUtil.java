@@ -6,7 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.tymls.server.ISRuntimeException;
 import com.tymls.server.vo.AppConstant;
-import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanMap;
 import org.apache.commons.lang3.StringUtils;
 
@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Log
+@Slf4j
 public class JSONUtil {
 
   private JSONUtil() {}
@@ -62,8 +62,7 @@ public class JSONUtil {
     try {
       list = Files.readAllLines(Paths.get(fileName), StandardCharsets.UTF_8);
     } catch (IOException e) {
-      // TODO 打开注释
-      // LogUtil.error(e.getMessage(), e);
+      log.error(e.getMessage(), e);
       throw new ISRuntimeException(e.getMessage(), e);
     }
     for (String s : list) {
@@ -96,8 +95,7 @@ public class JSONUtil {
       fw.write(text);
       fw.close();
     } catch (IOException e) {
-      // TODO 打开注释
-      // LogUtil.error(e.getMessage(), e);
+      log.error(e.getMessage(), e);
       throw new ISRuntimeException(e.getMessage(), e);
     }
   }

@@ -4,21 +4,19 @@ import com.tymls.server.common.ConfigConstants;
 import com.tymls.server.common.auth.CommonUtil;
 import com.tymls.server.model.Handler;
 import com.tymls.server.model.HttpResponse;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.*;
-import io.netty.util.CharsetUtil;
-import lombok.extern.java.Log;
+import io.netty.handler.codec.http.FullHttpRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-@Log
+@Slf4j
+@Sharable
 public class DispatcherHandler extends SimpleChannelInboundHandler<Object> {
 
   /** http服务对外提供的所有处理器 */
@@ -76,8 +74,7 @@ public class DispatcherHandler extends SimpleChannelInboundHandler<Object> {
         handlerDefine = this.getHandlerDefine(context);
         handlerDefine.handler.doHandle(context);
       } catch (Exception e) {
-        // TODO 错误日志
-        // LogUtil.error(e.getMessage(), e);
+        log.error(e.getMessage(), e);
         context.setFatalError(e.getMessage());
         context.writeToChannel();
         // context.addSysLog(true); // 记录系统日志
@@ -91,32 +88,6 @@ public class DispatcherHandler extends SimpleChannelInboundHandler<Object> {
   @Override
   public void channelReadComplete(ChannelHandlerContext ctx) {
     ctx.flush();
-  }
-
-  private void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) {
-    diapathcer(ctx, req);
-  }
-
-  private void diapathcer(ChannelHandlerContext ctx, FullHttpRequest req) {
-    Channel channel = ctx.channel();
-    if (req.method() == HttpMethod.GET && "/login".equals(req.uri())) {
-      log.info("登陆被调用,远程客户端地址为:" + channel.remoteAddress());
-      // 定义发送的消息
-      ByteBuf content =
-          Unpooled.copiedBuffer("{'code':1,'msg':'成功':'data':'data'}", CharsetUtil.UTF_8);
-      // 构建一个http response
-      FullHttpResponse response =
-          new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, content);
-      // 为响应增加数据类型和长度
-      // response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain");
-
-      response.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/json");
-      response.headers().set(HttpHeaderNames.CONTENT_LENGTH, content.readableBytes());
-      // 把响应刷到客户端
-      ctx.writeAndFlush(response);
-    } else if (req.method() == HttpMethod.POST && "/register".equals(req.uri())) {
-      log.info("注册被调用,远程客户端地址为:" + channel.remoteAddress());
-    }
   }
 
   @Override
@@ -145,7 +116,9 @@ public class DispatcherHandler extends SimpleChannelInboundHandler<Object> {
   }
 
   public HandlerDefine getHandlerDefine(HttpHandlerContext ctx) {
-    if (this.handlerDefins == null) this.buildHandlerDefines();
+    if (this.handlerDefins == null) {
+      this.buildHandlerDefines();
+    }
     String handlerKey = ctx.getHandlerName();
     HandlerDefine result = handlerDefins.get(handlerKey);
     if (result == null) {
